@@ -1,5 +1,6 @@
 open Instance
 exception Infeasible_solution
+exception Capacities
 
 (* valida istanza: true se corretta *)
 let validate instance =
@@ -42,5 +43,5 @@ let objective_function instance x =
           acc
       in
       aux 0 0
-  | Some u ->
+  | Some u -> raise Capacities
 

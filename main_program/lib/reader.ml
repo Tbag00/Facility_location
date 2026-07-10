@@ -8,10 +8,12 @@ let parse_array line =
 let parse_matrix line =
   String.split_on_char ';' line |> List.map parse_array |> Array.of_list
 
-let parse_line line =
-  match String.split_on_char '=' line with
-  | [key; value] -> (key, value)
-  | _ -> raise (Wrong_format "stringa malformata: expected KEY=VALUE\n")   (* riga malformata, niente '=' o più di uno *)
+let parse_parameters param_lst =
+  List.map (fun line -> 
+    match String.split_on_char '=' line with
+    | [key; value] -> (key, value)
+    | _ -> raise (Wrong_format "stringa malformata: expected KEY=VALUE\n")   (* riga malformata, niente '=' o più di uno *)
+  ) param_lst
 
 
 let instance_of_capability capability : Instance.t  =

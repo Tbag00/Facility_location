@@ -42,19 +42,23 @@ let rec local_search (x0, f_x0) f = (* passo coppia invece che solo x0 per evita
   else
     (x0, f_x0)
 
-
-let iterated_search rng iterations p_mut instance f =
-  let x0 = Array.init instance.n (fun _ -> Random.State.bool rng) in (* genera array dimensione n con bool a caso *)
+let iterated_search ~rng ~log ~iterations ~p_mut ~instance ~f =
+  let x0 = Array.init instance.n (fun _ -> Random.State.bool rng) in
   let (x0, f_x0) = local_search (x0, f x0) f in
-  let rec aux current f_current i =
+  let rec aux current f_current best_iter i =
+    (match log with
+     | Some file ->
+         Csv_logger.trace_logger ~file ~iteration:i
+           ~current_cost:f_current ~best_cost:f_current
+     | None -> ());
     if i < iterations then
       let tmp = perturbation rng current p_mut in
       let (next, f_next) = local_search (tmp, f tmp) f in
-
-      if f_next < f_current then 
-        aux next f_next (i + 1)
-      else 
-        aux current f_current (i + 1)
+      if f_next < f_current then
+        aux next f_next (i + 1) (i + 1)
+      else
+        aux current f_current best_iter (i + 1)
     else
-      (current, f_current)
-  in aux x0 f_x0 0
+      (current, f_current, best_iter, iterations)
+  in
+  aux x0 f_x0 0 0

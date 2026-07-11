@@ -22,25 +22,28 @@ let accept_solution rng t f_old f_new = (* restituisce true se sceglie nuova sol
     let p = exp (-. (float_of_int delta) /. t) in
     (Random.State.float rng 1.0) < p
 
-
-let simulated_annealing rng t0 t_end alpha new_low instance f =
-  let s0 = Array.init instance.n (fun _ -> Random.State.bool rng) in (* genera array dimensione n con bool a caso *)
+let simulated_annealing ~log ~rng ~t0 ~t_end ~alpha ~new_low ~instance ~f =
+  let s0 = Array.init instance.n (fun _ -> Random.State.bool rng) in
   let f_s0 = f s0 in
-  let rec aux i (s, f_s) (best, f_best) t =
+  let rec aux i (s, f_s) (best, f_best) best_iter t =
+    (match log with
+     | Some file ->
+         Csv_logger.trace_logger ~file ~iteration:i
+           ~current_cost:f_s ~best_cost:f_best
+     | None -> ());
     if t < t_end then
-      (best, f_best)
+      (best, f_best, best_iter, i - 1)
     else
       let next = random_neighbor rng s instance.n in
       let f_next = f next in
       let accepted = accept_solution rng t f_s f_next in
-      let best, f_best = if f_next < f_best then (next, f_next) else (best, f_best) in
-      let t = if i %% new_low = 0 then
-        alpha *. t
+      let best, f_best, best_iter =
+        if f_next < f_best then (next, f_next, i) else (best, f_best, best_iter)
+      in
+      let t = if i %% new_low = 0 then alpha *. t else t in
+      if accepted then
+        aux (i + 1) (next, f_next) (best, f_best) best_iter t
       else
-        t
-      in if accepted then
-        aux (i+1) (next, f_next) (best, f_best) t
-      else
-        aux (i+1) (s, f_s) (best, f_best) t
+        aux (i + 1) (s, f_s) (best, f_best) best_iter t
   in
-  aux 1 (s0, f_s0) (s0, f_s0) t0
+  aux 1 (s0, f_s0) (s0, f_s0) 0 t0

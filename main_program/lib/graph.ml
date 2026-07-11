@@ -24,6 +24,9 @@ type graph = {
   pred: (int * int) option array;  (* (u, id)  per riconoscere edge da cui vengo*)
 }
 
+exception Too_much_flow of edge * int
+exception Unreachable_node
+
 let add_cost d cost =
   match d with
   | Infinity -> Infinity            (* Infinity + qualsiasi cosa = Infinity, sempre corretto *)
@@ -136,17 +139,80 @@ let bellman_ford g =
         aux (i+1)
   in
   aux 0;
-  g
-
 
 let find_shortest_path g =
-  let path = [] in
-  let aux i acc = 
+  let sink = g.n -1 in
+  let rec aux i acc = 
     if i > 0 then
-      aux (i-1) [g.pred.(i)] @ acc
+      match g.pred.(i) with
+      | None -> raise Unreachble_node
+      | Some (u, id) -> aux u ((u,id)::acc)
     else
       acc
   in
-  aux (g.n - 1) []
+  aux sink []
 
-let augment g path amaunt =
+let add_flow g edge amount =
+  let new_flow = edge.flow + amount in
+  if new_flow > edge.cap then
+    raise (Too_much_flow (edge, amount))
+  else begin
+    edge.flow <- new_flow;
+    let e_rev = g.adj.(edge.dest).(edge.rev_id) in
+    e_rev.flow <- e_rev.flow - amount
+  end
+
+let bottleneck g path =
+  List.fold_left (fun acc (u, idx) ->
+    let e = g.adj.(u).(idx) in
+    min acc (e.cap - e.flow)
+  ) max_int path
+
+let augment g path amount =
+  List.iter (fun (u, idx) ->
+    let e = g.adj.(u).(idx) in
+    add_flow e amount
+  ) path
+
+let min_cost_flow g =
+  let rec aux g =
+    match g.dist.(g.n - 1) with 
+    | Infinity -> ()
+    | Finite ->
+        let path = find_shortest_path g in
+        let bottleneck = g path in
+        augment g path bottleneck;
+        aux g
+  in
+  aux (bellman_ford g)
+
+let extract_shipments g n_facility m_customer =
+  Array.init n_facility (fun i ->
+    Array.init m_customer (fun j ->
+      let e = g.adj.(i + 1).(j + 1) in  (* +1 per saltare il residuo verso source *)
+      e.flow
+    )
+  )
+
+let update_facility_capacities g capacities is_open_vector =
+  Array.iteri (fun i is_open ->
+    g.adj.(0).(i).cap <- if is_open then capacities.(i) else 0
+  ) is_open_vector
+
+let reset_flow g =
+  Array.iter (fun out_edges ->
+    Array.iter (fun e -> e.flow <- 0) out_edges
+  ) g.adj
+
+let open_facility facilities capacities g =
+  Array.iteri (fun i is_open ->
+    if is_open then
+      adsa
+    else
+      close_facility i+1
+
+  ) facilities
+
+  let reset_graph_for_evaluation g capacities is_open_vector =
+    reset_flow g;
+    update_facility_capacities g capacities is_open_vector

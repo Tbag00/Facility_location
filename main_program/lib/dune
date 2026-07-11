@@ -1,2 +1,3 @@
 (library
- (name facility_problem_lib))
+ (name facility_problem_lib)
+(libraries csv))

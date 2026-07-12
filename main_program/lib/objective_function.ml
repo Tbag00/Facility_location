@@ -1,4 +1,5 @@
 open Instance
+open Cost
 exception Infeasible_solution
 exception Capacities
 
@@ -18,6 +19,19 @@ let validate instance =
   cost_matrix_rows = instance.n &&
   cost_matrix_cols = instance.m &&
   valid_capacity
+
+let opening_cost x f = (* f: array dei costi *)
+  let only_open = Array.map2 (fun costo_i is_open -> if is_open then costo_i else 0) f x in
+  Array.fold_left (+) 0 only_open
+
+  (* lo passo nel caso*)
+let upper_bound instance =
+  let worst_assignment =
+    Array.fold_left (fun acc row -> Array.fold_left max acc row) 0 instance.c
+  in
+  let total_demand = Array.fold_left (+) 0 instance.d in
+  let total_opening = Array.fold_left (+) 0 instance.f in
+  (worst_assignment * total_demand) + total_opening + 1
   
 (* prende istanza e restituisce funzione obiettivo corrispondente *)
 let objective_function instance x =
@@ -36,12 +50,11 @@ let objective_function instance x =
             Array.fold_left (fun best row -> min best row.(j)) max_int correct_cost_mat
           in
           if costo_spedizione = max_int then
-            raise Infeasible_solution
+            Infeasible
           else
             aux (j + 1) (costo_spedizione * instance.d.(j) + acc)
         else
-          acc
+          Finite acc
       in
-      aux 0 0
+      aux 0 (opening_cost x instance.f) (* sommo costo spedizioni al costo di apertura *)
   | Some u -> raise Capacities
-

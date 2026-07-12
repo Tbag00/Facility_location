@@ -1,11 +1,12 @@
 exception File_exception of string
+open Cost
 
 (* nome del file dovrebbe contenere algoritmo metaparametri e seed *)
 let create_csv name header =
   if Sys.file_exists name then
     raise (File_exception ("file already exists: " ^ name));
 
-  let oc = Out_channel.open_gen [Open_creat; Open_excl] 0o644 name in
+  let oc = Out_channel.open_gen [Open_creat; Open_wronly; Open_excl] 0o644 name in
   (try
      let csv_oc = Csv.to_channel oc in
      Csv.output_record csv_oc header;
@@ -32,8 +33,8 @@ let trace_logger ~file ~iteration ~current_cost ~best_cost =
 
   let row = [
     string_of_int iteration;
-    string_of_int current_cost;
-    string_of_int best_cost
+    string_of_cost current_cost;
+    string_of_cost best_cost
   ] in
   append_row file row
 
@@ -49,7 +50,7 @@ let runs_logger ~file ~n ~m ~algorithm ~seed ~best_cost ~best_iteration ~total_i
   let m_str               = string_of_int m in
   let algorithm_str       = Algorithm.string_of_algorithm algorithm in
   let seed_str            = string_of_int seed in
-  let best_cost_str       = string_of_int best_cost in
+  let best_cost_str       = string_of_cost best_cost in
   let best_iteration_str  = string_of_int best_iteration in
   let total_iteration_str = string_of_int total_iteration in
   let time_str            = string_of_float time in

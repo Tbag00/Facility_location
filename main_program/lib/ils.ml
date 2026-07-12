@@ -1,4 +1,5 @@
 open Instance
+open Cost
 
 let perturbation rng vector p_mut =
   let result = Array.copy vector in
@@ -31,13 +32,13 @@ let best_neighbor (x0, f_x0) f = (* f: objective function *)
   let rec aux best = function
     [] -> best
     | (x, fx) :: rest ->
-        if fx < snd best then aux (x, fx) rest
+        if fx << snd best then aux (x, fx) rest
         else aux best rest
   in aux (x0, f_x0) f_graph
 
 let rec local_search (x0, f_x0) f = (* passo coppia invece che solo x0 per evitare ricalcoli *)
   let (best, f_best) = best_neighbor (x0, f_x0) f in
-  if f_best < f_x0 then
+  if f_best << f_x0 then
     local_search (best, f_best) f
   else
     (x0, f_x0)
@@ -54,7 +55,7 @@ let iterated_search ~rng ~log ~iterations ~p_mut ~instance ~f =
     if i < iterations then
       let tmp = perturbation rng current p_mut in
       let (next, f_next) = local_search (tmp, f tmp) f in
-      if f_next < f_current then
+      if f_next << f_current then
         aux next f_next (i + 1) (i + 1)
       else
         aux current f_current best_iter (i + 1)

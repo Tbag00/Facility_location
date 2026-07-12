@@ -1,4 +1,5 @@
 open Instance
+open Cost
 
 (* sollevata quando una soluzione non è ammissibile
    (nessuna facility aperta può servire un cliente) *)
@@ -12,4 +13,4 @@ exception Capacities
 val validate : t -> bool
 
 (* prende istanza e restituisce funzione obiettivo corrispondente *)
-val objective_function : t -> bool array -> int
+val objective_function : t -> bool array -> cost

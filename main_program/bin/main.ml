@@ -46,7 +46,7 @@ let run ~seed ~trace ~rng ~instance ~f ~params_dict ~algorithm =
            let p_f = float_of_string p in
            let log =
              if trace then
-               Some (Printf.sprintf "trace_ils_iter%d_pmut%s_seed%d.csv"
+               Some (Printf.sprintf "trace_output/trace_ils_iter%d_pmut%s_seed%d.csv"
                        iter_i p seed)
              else None
            in
@@ -66,7 +66,7 @@ let run ~seed ~trace ~rng ~instance ~f ~params_dict ~algorithm =
            let new_low_i = int_of_string new_low in
            let log =
              if trace then
-               Some (Printf.sprintf "trace_sa_t0%s_tend%s_alpha%s_newlow%s_seed%d.csv"
+               Some (Printf.sprintf "trace_output/trace_sa_t0%s_tend%s_alpha%s_newlow%s_seed%d.csv"
                        t0 t_end alpha new_low seed)
              else None
            in
@@ -96,13 +96,15 @@ let () =
     in
     let elapsed_time = Sys.time () -. start_time in
 
-    Printf.printf "Costo soluzione trovata: %d\n" f_solution;
+    let cost_str = "Costo soluzione trovata: " ^ Cost.string_of_cost f_solution ^ "\n" in
+    print_string cost_str;
 
     let output_name =
       match !output_name with
-      | None -> "result"
-      | Some str -> str
+      | None -> "output/result"
+      | Some str -> ("output/" ^ str)
     in
+
     let runs_file = output_name ^ ".csv" in
     let facilities = Array.to_list solution in
 

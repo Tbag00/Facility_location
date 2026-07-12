@@ -1,4 +1,5 @@
 open Instance
+open Cost
 
 let (%%) x y =  (* Modulo nativo ha anche numeri negativi *)
   let result = x mod y in
@@ -14,13 +15,18 @@ let random_neighbor rng vector length =
   result.(random_index) <- not (result.(random_index));
   result
 
-
 let accept_solution rng t f_old f_new = (* restituisce true se sceglie nuova soluzione *)
-  let delta = f_new - f_old in
-  if delta <= 0 then true
-  else
-    let p = exp (-. (float_of_int delta) /. t) in
-    (Random.State.float rng 1.0) < p
+  match f_new, f_old with
+  | Infeasible, _ ->
+      false (* non accettiamo mai una mossa che porta a una soluzione infeasible *)
+  | Finite _, Infeasible ->
+      true (* qualunque soluzione feasible è sempre meglio di una infeasible *)
+  | Finite new_c, Finite old_c ->
+      let delta = new_c - old_c in
+      if delta <= 0 then true
+      else
+        let p = exp (-. (float_of_int delta) /. t) in
+        (Random.State.float rng 1.0) < p
 
 let simulated_annealing ~log ~rng ~t0 ~t_end ~alpha ~new_low ~instance ~f =
   let s0 = Array.init instance.n (fun _ -> Random.State.bool rng) in
@@ -38,7 +44,7 @@ let simulated_annealing ~log ~rng ~t0 ~t_end ~alpha ~new_low ~instance ~f =
       let f_next = f next in
       let accepted = accept_solution rng t f_s f_next in
       let best, f_best, best_iter =
-        if f_next < f_best then (next, f_next, i) else (best, f_best, best_iter)
+        if f_next << f_best then (next, f_next, i) else (best, f_best, best_iter)
       in
       let t = if i %% new_low = 0 then alpha *. t else t in
       if accepted then

@@ -1,4 +1,29 @@
-let trace = ref true
+open Facility_problem_lib
+
+let usage_msg =
+  "facility_location <input_file> -a <algorithm: ils | sa> -s <seed> -p <parameter1>... [-o <output_name>]"
+
+(* command line arguments*)
+let input_file  = ref ""
+let algorithm   = ref Algorithm.ILS
+let seed        = ref 0
+let capacitated = ref false
+let params      = ref [] (* metaparametri da finetunare *)
+let output_name = ref None
+let trace       = ref true
+
+(* parameters setters *)
+let set_param s =
+  params := s :: !params
+
+let set_algorithm s =
+  algorithm := Algorithm.algorithm_of_string s
+
+let set_output s =
+  output_name := Some s
+
+let anon_fun filename =
+  input_file := filename
 
 let speclist =
   [
@@ -59,7 +84,7 @@ let () =
   try
     let instance = Reader.read_problem !input_file in
     if not (Objective_function.validate instance) then
-      raise (Wrong_format "istanza non valida");
+      raise (Reader.Wrong_format "istanza non valida");
     let f = Objective_function.objective_function instance in
     let rng = Random.State.make [| !seed |] in
     let params_dict = Reader.parse_parameters !params in
@@ -94,9 +119,9 @@ let () =
       ~facilities
       ~params_dict
   with
-  | Wrong_format msg ->
+  | Reader.Wrong_format msg ->
       Printf.printf "%s\n" msg
-  | Invalid_argument msg ->
+  | Reader.Invalid_arg msg ->
       Printf.printf "%s\n" msg
-  | Wrong_dimension msg ->
+  | Reader.Wrong_dimension msg ->
       Printf.printf "%s\n" msg

@@ -8,12 +8,13 @@ let parse_array line =
 let parse_matrix line =
   String.split_on_char ';' line |> List.map parse_array |> Array.of_list
 
-let parse_parameters param_lst =
-  List.map (fun line -> 
+let parse_line line =
     match String.split_on_char '=' line with
     | [key; value] -> (key, value)
     | _ -> raise (Wrong_format "stringa malformata: expected KEY=VALUE\n")   (* riga malformata, niente '=' o più di uno *)
-  ) param_lst
+
+let parse_parameters param_lst =
+  List.map parse_line param_lst
 
 
 let instance_of_capability capability : Instance.t  =
@@ -37,13 +38,13 @@ let instance_of_capability capability : Instance.t  =
   in
   aux capability;
   match !n, !m, !f, !d, !c with
-  | Some n, Some m, Some f, Some d, Some c -> {n; m; f; d; c; u=!u;}
-  | _ -> raise (Wrong_format "mancano degli argomenti\n")
+  | Some n, Some m, Some f, Some d, Some c -> { n; m; f; d; c; u = !u; }
+  | _ -> raise (Wrong_format "mancano parametri nell'istanza, controlla il file input\n")
 
 let parse_problem ic =
   let rec aux acc = 
     match In_channel.input_line ic with
-    | Some line -> parse_line line :: acc
+    | Some line -> aux ((parse_line line) :: acc)
     | None -> List.rev acc
   in
   let capability = aux [] in

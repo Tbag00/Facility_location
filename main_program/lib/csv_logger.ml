@@ -5,14 +5,24 @@ let create_csv name header =
   if Sys.file_exists name then
     raise (File_exception ("file already exists: " ^ name));
 
-  Out_channel.with_open_gen [Open_creat; Open_excl] 0o644 name (
-    fun oc -> Csv.output_record (Csv.to_channel oc) header
-    )
+  let oc = Out_channel.open_gen [Open_creat; Open_excl] 0o644 name in
+  (try
+     let csv_oc = Csv.to_channel oc in
+     Csv.output_record csv_oc header;
+     Csv.close_out csv_oc (* flusha il buffer di Csv e chiude oc *)
+   with e ->
+     Out_channel.close_noerr oc; (* oc non ancora chiuso: non credo sia necessario *)
+     raise e)
 
 let append_row file row =
-  Out_channel.with_open_gen [Open_wronly; Open_append] 0o644 file (
-    fun oc -> Csv.output_record (Csv.to_channel oc) row
-  )
+  let oc = Out_channel.open_gen [Open_wronly; Open_append] 0o644 file in
+  (try
+     let csv_oc = Csv.to_channel oc in
+     Csv.output_record csv_oc row;
+     Csv.close_out csv_oc
+   with e ->
+     Out_channel.close_noerr oc;
+     raise e)
 
 let trace_logger ~file ~iteration ~current_cost ~best_cost =
   if not (Sys.file_exists file) then begin

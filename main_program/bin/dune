@@ -1,4 +1,5 @@
 (executable
  (public_name main_program)
  (name main)
- (libraries facility_problem_lib))
+ (libraries facility_problem_lib)
+ (modes byte exe))

@@ -13,6 +13,11 @@ _build/
 *.o
 *.a
 *.out
+*.csv
+output/
+trace/output
+figs/
+
 .opam/
 
 ### Python ###

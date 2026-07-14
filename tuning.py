@@ -30,7 +30,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent / "main_program"  # adatta se ser
 EXECUTABLE = PROJECT_ROOT / "_build/default/bin/main.exe"
 
 INSTANCES_DIR = PROJECT_ROOT / "data" / "tuning_instances"
-RESULTS_CSV = PROJECT_ROOT / "tuning_results.csv"
+RESULTS_CSV = PROJECT_ROOT / "output" / "tuning_results.csv"
 
 SEEDS = [111, 222, 333]  # più seed per run = stima meno rumorosa del best_cost
 
@@ -40,11 +40,13 @@ USE_GENERATED_INSTANCES = True
 
 # usata solo se USE_GENERATED_INSTANCES = True
 GENERATED_INSTANCE_SIZES = [
-    # (n facilities, m customers)
+    (5, 10),      # sanity check, enumerabile a mano
     (10, 20),
     (20, 40),
+    (50, 100),
+    (100, 200),
+    (200, 400),   # stress test tempi/scalabilità
 ]
-
 # usata solo se USE_GENERATED_INSTANCES = False
 MANUAL_INSTANCES = [
     PROJECT_ROOT / "data" / "input1.txt",
@@ -65,7 +67,7 @@ SA_GRID = {
     "new_low": [10, 50, 100],
 }
 
-RUN_TIMEOUT_SECONDS = 300  # kill una run che si impalla, non l'intera campagna
+RUN_TIMEOUT_SECONDS = 180  # kill una run che si impalla, non l'intera campagna
 
 
 # ---------------------------------------------------------------------------

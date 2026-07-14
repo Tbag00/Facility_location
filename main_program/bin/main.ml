@@ -101,8 +101,8 @@ let () =
 
     let output_name =
       match !output_name with
-      | None -> "output/result"
-      | Some str -> ("output/" ^ str)
+      | None -> "result"
+      | Some str -> str
     in
 
     let runs_file = output_name ^ ".csv" in
